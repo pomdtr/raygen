@@ -3,7 +3,7 @@
 ## Installation Guide
 
 ```sh
-pip install git+https://github.com/tangentlabs/django-oscar-paypal.git
+pip install git+https://github.com/pomdtr/raygen.git
 ```
 
 ## Usage
