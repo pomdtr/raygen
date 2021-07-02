@@ -8,10 +8,10 @@ pip install git+https://github.com/pomdtr/raygen.git
 
 ## Usage
 
-Write a csv file listing the title, command and optional description of the scripts.
+Write a csv or json file listing the title, command and optional description of the scripts.
 
 ```csv
-title,command,description
+title,command
 Balance windows size,yabai -m space --balance
 Stack on Top of Left,yabai -m window --stack west
 Stack on Top of Down,yabai -m window --stack south
@@ -19,9 +19,21 @@ Stack on Top of Right,yabai -m window --stack east
 Stack on Top of Up,yabai -m window --stack north
 ```
 
-Run the raygen command `raygen options.csv --output-dir scripts-dir`
+Run the raygen command `raygen --header-row --output-dir scripts options.csv` to generate a set of scripts:
 
-The example folder contains a list of scripts for the [yabai](https://github.com/koekeishiya/yabai) window manager generated using this command.
+```console
+$ tree scripts
+scripts/
+├── balance-windows-size.sh
+├── stack-on-top-of-down.sh
+├── stack-on-top-of-left.sh
+├── stack-on-top-of-right.sh
+└── stack-on-top-of-up.sh
+
+0 directories, 5 files
+```
+
+See the [example](./examples) folder for more illustrated usecases.
 
 ## Preview
 
