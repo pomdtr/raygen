@@ -36,7 +36,7 @@ class SmartFormatter(argparse.RawTextHelpFormatter, argparse.ArgumentDefaultsHel
     "Custom formatter to get both newlines in epilog, and defaults values"
 
 
-PARSER = argparse.ArgumentParser(formatter_class=SmartFormatter, description="Script Generator for Raycast (https://raycast.com/)", epilog=EXAMPLE_TEXT)
+PARSER = argparse.ArgumentParser(formatter_class=SmartFormatter, description="Script Generator for Raycast (https://raycast.com/). See https://github.com/raycast/script-commands for an expansive documentation.", epilog=EXAMPLE_TEXT)
 PARSER.add_argument("input_csv", help="csv describing the title, command and an optional description for each script. Use - to read from stdin.", type=argparse.FileType('r'))
 PARSER.add_argument("--output-dir", "-o", default="./scripts", type=Path, help="Output folder of all generated scripts.")
 PARSER.add_argument("--clean", "-r", action="store_true", help="automatically clean the output folder when it already exists.")
@@ -45,7 +45,7 @@ PARSER.add_argument("--mode", "-m", default="silent", choices=["silent", "compac
 PARSER.add_argument("--package", help="display name of the package that is shown as subtitle in the root search.")
 PARSER.add_argument("--icon", type=real_path, help="icon that is displayed in the root search (PNG or JPEG).")
 PARSER.add_argument("--icon-dark", type=real_path, help="same as icon, but for dark theme. If not specified, then icon will be used in both themes.")
-PARSER.add_argument("--argument", "-a", metavar="PLACEHOLDER")
+PARSER.add_argument("--argument", "-a", metavar="PLACEHOLDER", help="add a custom argument to the command")
 PARSER.add_argument("--encode-arg", action="store_true", help="if you want Raycast to perform percent encoding on the argument value before passing it to the script.")
 PARSER.add_argument("--secure-arg", action="store_true", help="entered text will be replaced with asterisks and won't be recorded by history.")
 PARSER.add_argument("--optional-arg", action="store_true", help="if you want to mark the argument as optional.")
