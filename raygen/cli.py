@@ -60,8 +60,12 @@ def get_parser():
     PARSER.add_argument(
         "--input-format", "-f", choices=("csv", "json"), help="format of the input"
     )
+    PARSER.add_argument("--line-delimited", action="store_true")
     PARSER.add_argument(
-        "--header-row", "-H", help="Do not parse the first line as script input", action="store_true"
+        "--header-row",
+        "-H",
+        help="Do not parse the first line as script input",
+        action="store_true",
     )
     PARSER.add_argument(
         "--delimiter", "-D", help="Set a custom csv delimiter", default=","
@@ -151,7 +155,14 @@ def get_parser():
     return PARSER
 
 
-def parse_json_input(file):
+def parse_json_input(file, line_delimited):
+    if line_delimited:
+        for line in file:
+            item = json.loads(line)
+            if any(key not in item for key in ("title", "command")):
+                raise ValueError("Both title and command title are required")
+            yield item
+        return
     for item in json.load(file):
         if any(key not in item for key in ("title", "command")):
             raise ValueError("Both title and command title are required")
@@ -161,7 +172,9 @@ def parse_json_input(file):
 def parse_csv_input(file, header_row, delimiter):
     if header_row:
         reader = csv.DictReader(file, delimiter=delimiter)
-        if reader.fieldnames is None or any(key not in reader.fieldnames for key in ("title", "command")):
+        if reader.fieldnames is None or any(
+            key not in reader.fieldnames for key in ("title", "command")
+        ):
             raise ValueError("Both title and command title are required")
         yield from reader
         return
@@ -179,10 +192,11 @@ def main():
 
     global_parameters = [
         f"# @raycast.schemaVersion {args.schema_version}",
-        f"# @raycast.needsConfirmation {json.dumps(args.needs_confirmation)}",
         f"# @raycast.mode {args.mode}",
     ]
 
+    if args.needs_confirmation:
+        global_parameters.append("# @raycast.needsConfirmation true")
     if args.package:
         global_parameters.append(f"# @raycast.packageName {args.package}")
     if args.current_directory_path:
@@ -204,34 +218,37 @@ def main():
         }
         global_parameters.append(f"# @raycast.argument1 {json.dumps(options)}")
 
-    if args.icon:
-        filename = args.icon.name
-        shutil.copy(args.icon, args.output_dir / filename)
-        global_parameters.append(f"# @raycast.icon {filename}")
-
-    if args.icon_dark:
-        shutil.copy(args.icon_dark, args.output_dir / "iconDark")
-        global_parameters.append(f"# @raycast.iconDark ./iconDark")
-
     input_file, input_suffix = args.input
 
     if args.input_format:
         items = (
             parse_csv_input(input_file, args.header_row, args.delimiter)
             if args.input_format == "csv"
-            else parse_json_input(input_file)
+            else parse_json_input(input_file, args.line_delimited)
         )
     elif input_suffix == ".json":
-        items = parse_json_input(input_file)
+        items = parse_json_input(input_file, args.line_delimited)
     elif input_suffix == ".csv":
         items = parse_csv_input(input_file, args.header_row, args.delimiter)
     else:
-        print("Raygen was not able to infer the input format. Please provide the --input-format flag")
+        print(
+            "Raygen was not able to infer the input format. Please provide the --input-format flag"
+        )
         sys.exit(1)
 
     if args.clean and args.output_dir.exists():
         shutil.rmtree(args.output_dir)
     args.output_dir.mkdir(parents=True, exist_ok=True)
+
+    if args.icon:
+        filename = args.icon.name
+        shutil.copy(args.icon, args.output_dir / filename)
+        global_parameters.append(f"# @raycast.icon {filename}")
+
+    if args.icon_dark:
+        filename = args.dark_icon.name
+        shutil.copy(args.icon_dark, args.output_dir / filename)
+        global_parameters.append(f"# @raycast.iconDark {filename}")
 
     for item in items:
         filename = item["title"].replace(" ", "-").lower() + ".sh"
@@ -239,7 +256,7 @@ def main():
             *global_parameters,
             f"# @raycast.title {item['title']}",
         ]
-        if "description" in item:
+        if item.get("description"):
             script_parameters.append(f"# @raycast.description {item['description']}")
 
         with open(args.output_dir / filename, "w") as fh:
