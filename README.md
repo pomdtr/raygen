@@ -23,6 +23,10 @@ Run the raygen command `raygen options.csv --output-dir scripts-dir`
 
 The example folder contains a list of scripts for the [yabai](https://github.com/koekeishiya/yabai) window manager generated using this command.
 
+## Preview
+
+![example plugin preview](example/preview.png)
+
 ## Argument documentation
 
 ```console
