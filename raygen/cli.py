@@ -23,7 +23,7 @@ raygen options.csv
 cat options.csv | raygen - --package-name Example --icon icon.png --clean
 
 # Add an argument
-raygen options.csv --arg queryParam --encode-arg
+raygen options.csv --argument queryParam --encode-arg
 """
 
 def real_path(path_string):
