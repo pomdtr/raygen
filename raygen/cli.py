@@ -7,7 +7,7 @@ from string import Template
 import json
 
 TEMPLATE = Template(
-"""#!/usr/bin/env bash
+"""#!/usr/bin/env $shebang
 $parameters
 
 $command
@@ -53,6 +53,7 @@ PARSER.add_argument("--current-directory-path", help="path from which the script
 PARSER.add_argument("--needs-confirmation", action="store_true", help="show confirmation alert dialog before running the script.")
 PARSER.add_argument("--author", help="define an author name to be part of the script commands documentation.")
 PARSER.add_argument("--author-url", help="author social media, website, email or anything to help the users to get in touch.")
+PARSER.add_argument("--shebang", default="bash", help="customize the shebang of the script (Advanced Usage)")
 
 def main():
     args = PARSER.parse_args()
@@ -114,7 +115,7 @@ def main():
 
         with open(args.output_dir / filename, "w") as fh:
             fh.write(
-                TEMPLATE.safe_substitute(title=line["title"], command=line["command"], parameters="\n".join(script_parameters))
+                TEMPLATE.safe_substitute(title=line["title"], command=line["command"], parameters="\n".join(script_parameters), shebang=args.shebang)
             )
 
 if __name__ == "__main__":
