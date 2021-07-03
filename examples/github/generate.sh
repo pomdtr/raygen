@@ -11,4 +11,4 @@ gh repo list "$ORG" \
   --json pushedAt \
   --limit "$LIMIT" \
   --jq '.[] | select(.pushedAt > '"$MIN_PUSH_TIME"') | {title: "Open \(.name) Repository", command: "open \(.url)", description: .description}' \
-| raygen --icon logo.png --input-format ndjson --package Github --clean -
+| raygen --icon logo.png --input-format ndjson --package-name Github --clean -

@@ -1,0 +1,9 @@
+{
+    "params": {
+        "packageName": "test"
+    },
+    "embeds": ["test.json"],
+    "items": [
+        {"title": "test", "command": "test"}
+    ]
+}

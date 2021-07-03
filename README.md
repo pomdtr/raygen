@@ -48,7 +48,7 @@ $ raygen --help
 usage: raygen [-h] [--input-format {csv,tsv,json,ndjson}] [--header-row]
               [--output-dir OUTPUT_DIR] [--clean]
               [--schema-version SCHEMA_VERSION]
-              [--mode {silent,compact,fullOutput}] [--package PACKAGE]
+              [--mode {silent,compact,fullOutput}] [--package-name PACKAGE]
               [--icon ICON] [--icon-dark ICON_DARK] [--argument PLACEHOLDER]
               [--encode-arg] [--secure-arg] [--optional-arg]
               [--current-directory-path CURRENT_DIRECTORY_PATH]
@@ -73,7 +73,7 @@ optional arguments:
                         schema version to prepare for future changes in the API.  (default: 1)
   --mode {silent,compact,fullOutput}, -m {silent,compact,fullOutput}
                         specifies how the script is executed and how the output is presented. (default: silent)
-  --package PACKAGE     display name of the package that is shown as subtitle in the root search. (default: None)
+  --package-name PACKAGE_NAME     display name of the package that is shown as subtitle in the root search. (default: None)
   --icon ICON           icon that is displayed in the root search (PNG or JPEG). (default: None)
   --icon-dark ICON_DARK
                         same as icon, but for dark theme. If not specified, then icon will be used in both themes. (default: None)

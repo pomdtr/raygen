@@ -1,19 +1,8 @@
 import argparse
-import csv
 import pathlib
-import shutil
 from pathlib import Path
-from string import Template
-import json
-import sys
 
-TEMPLATE = Template(
-    """#!/usr/bin/env $shebang
-$parameters
-
-$command
-"""
-)
+from raygen.io import generate_scripts, parse_items
 
 EXAMPLE_TEXT = """Example:
 
@@ -28,7 +17,7 @@ raygen options.csv --argument queryParam --encode-arg
 """
 
 
-def validate_path(path_str):
+def valid_path(path_str):
     path = pathlib.Path(path_str)
     if not path.exists():
         raise argparse.ArgumentTypeError(f"{path_str} does not exists!")
@@ -58,7 +47,10 @@ def get_parser():
         type=get_file_and_suffix,
     )
     PARSER.add_argument(
-        "--input-format", "-f", choices=("csv", "tsv", "json", "ndjson"), help="format of the input"
+        "--input-format",
+        "-f",
+        choices=("csv", "tsv", "json", "ndjson"),
+        help="format of the input",
     )
     PARSER.add_argument(
         "--header-row",
@@ -92,17 +84,17 @@ def get_parser():
         help="specifies how the script is executed and how the output is presented.",
     )
     PARSER.add_argument(
-        "--package",
+        "--package-name",
         help="display name of the package that is shown as subtitle in the root search.",
     )
     PARSER.add_argument(
         "--icon",
-        type=validate_path,
+        type=valid_path,
         help="icon that is displayed in the root search (PNG or JPEG).",
     )
     PARSER.add_argument(
         "--icon-dark",
-        type=validate_path,
+        type=valid_path,
         help="same as icon, but for dark theme. If not specified, then icon will be used in both themes.",
     )
     PARSER.add_argument(
@@ -150,131 +142,32 @@ def get_parser():
     )
     PARSER.add_argument(
         "--embed",
-        type=validate_path,
+        type=valid_path,
+        default=[],
         action="append",
         help="Include a file in the output folder (can be reapeated)",
     )
     return PARSER
 
 
-def parse_json_input(file, line_delimited):
-    if line_delimited:
-        for line in file:
-            item = json.loads(line)
-            if any(key not in item for key in ("title", "command")):
-                raise ValueError("Both title and command title are required")
-            yield item
-        return
-    for item in json.load(file):
-        if any(key not in item for key in ("title", "command")):
-            raise ValueError("Both title and command title are required")
-        yield item
-
-
-def parse_csv_input(file, header_row, delimiter=","):
-    if header_row:
-        reader = csv.DictReader(file, delimiter=delimiter)
-        if reader.fieldnames is None or any(
-            key not in reader.fieldnames for key in ("title", "command")
-        ):
-            raise ValueError("Both title and command title are required")
-        yield from reader
-        return
-    for row in csv.reader(file, delimiter=delimiter):
-        if len(row) < 2:
-            raise ValueError("At least two columns are required for each row")
-        res = {"title": row[0], "command": row[1]}
-        if len(row) > 2:
-            res["description"] = row[2]
-        yield res
-
-
 def main():
     args = get_parser().parse_args()
+    arg_dict = vars(args)
 
-    global_parameters = [
-        f"# @raycast.schemaVersion {args.schema_version}",
-        f"# @raycast.mode {args.mode}",
-    ]
+    input_file, input_suffix = arg_dict.pop("input")
+    raygen_params, raycast_params, raycast_items = parse_items(
+        input_file, input_suffix, arg_dict
+    )
 
-    if args.needs_confirmation:
-        global_parameters.append("# @raycast.needsConfirmation true")
-    if args.package:
-        global_parameters.append(f"# @raycast.packageName {args.package}")
-    if args.current_directory_path:
-        global_parameters.append(
-            f"# @raycast.currentDirectoryPath {args.current_directory_path}"
-        )
-    if args.author_url:
-        global_parameters.append(f"# @raycast.authorURL {args.author_url}")
-    if args.needs_confirmation:
-        global_parameters.append(f"# @raycast.needsConfirmation true")
+    generate_scripts(
+        raygen_params.output_dir,
+        raycast_params,
+        raycast_items,
+        clean=raygen_params.clean,
+        embeds=raygen_params.embeds,
+        shebang=raygen_params.shebang,
+    )
 
-    if args.argument:
-        options = {
-            "type": "text",
-            "placeholder": args.argument,
-            "percentEncoded": args.encode_arg,
-            "optional": args.optional_arg,
-            "secure": args.secure_arg,
-        }
-        global_parameters.append(f"# @raycast.argument1 {json.dumps(options)}")
-
-    input_file, input_suffix = args.input
-
-    if args.input_format:
-        input_format = args.input_format
-    elif input_suffix:
-        input_format = input_suffix[1:].lower()
-    else:
-        raise Exception
-    if input_format == "csv":
-        items = parse_csv_input(input_file, args.header_row)
-    elif input_format == "tsv":
-        items = parse_csv_input(input_file, args.header_row, delimiter="\t")
-    elif input_format == "json":
-        items = parse_json_input(input_file, line_delimited=False)
-    elif input_format == "ndjson":
-        items = parse_json_input(input_file, line_delimited=True)
-    else:
-        print(f"Unknown format : {args.input_format}")
-        sys.exit(1)
-
-    if args.clean and args.output_dir.exists():
-        shutil.rmtree(args.output_dir)
-    args.output_dir.mkdir(parents=True, exist_ok=True)
-
-    if args.icon:
-        filename = args.icon.name
-        shutil.copy(args.icon, args.output_dir / filename)
-        global_parameters.append(f"# @raycast.icon {filename}")
-
-    if args.icon_dark:
-        filename = args.dark_icon.name
-        shutil.copy(args.icon_dark, args.output_dir / filename)
-        global_parameters.append(f"# @raycast.iconDark {filename}")
-
-    for embed in args.embed:
-        shutil.copy(embed, args.output_dir / embed.name)
-
-    for item in items:
-        filename = item["title"].replace(" ", "-").lower() + ".sh"
-        script_parameters = [
-            *global_parameters,
-            f"# @raycast.title {item['title']}",
-        ]
-        if item.get("description"):
-            script_parameters.append(f"# @raycast.description {item['description']}")
-
-        with open(args.output_dir / filename, "w") as fh:
-            fh.write(
-                TEMPLATE.safe_substitute(
-                    title=item["title"],
-                    command=item["command"],
-                    parameters="\n".join(script_parameters),
-                    shebang=args.shebang,
-                )
-            )
 
 if __name__ == "__main__":
     main()
