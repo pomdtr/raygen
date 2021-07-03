@@ -151,9 +151,8 @@ def get_parser():
     PARSER.add_argument(
         "--embed",
         type=validate_path,
-        default=[],
-        nargs="*",
-        help="Include a file in the output folder",
+        action="append",
+        help="Include a file in the output folder (can be reapeated)",
     )
     return PARSER
 
