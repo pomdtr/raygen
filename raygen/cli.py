@@ -58,17 +58,13 @@ def get_parser():
         type=get_file_and_suffix,
     )
     PARSER.add_argument(
-        "--input-format", "-f", choices=("csv", "json"), help="format of the input"
+        "--input-format", "-f", choices=("csv", "tsv", "json", "ndjson"), help="format of the input"
     )
-    PARSER.add_argument("--line-delimited", action="store_true")
     PARSER.add_argument(
         "--header-row",
         "-H",
         help="Do not parse the first line as script input",
         action="store_true",
-    )
-    PARSER.add_argument(
-        "--delimiter", "-D", help="Set a custom csv delimiter", default=","
     )
     PARSER.add_argument(
         "--output-dir",
@@ -152,6 +148,12 @@ def get_parser():
         default="bash",
         help="customize the shebang of the script (Advanced Usage)",
     )
+    PARSER.add_argument(
+        "--embed",
+        type=validate_path,
+        nargs="*",
+        help="Include a file in the output folder",
+    )
     return PARSER
 
 
@@ -169,7 +171,7 @@ def parse_json_input(file, line_delimited):
         yield item
 
 
-def parse_csv_input(file, header_row, delimiter):
+def parse_csv_input(file, header_row, delimiter=","):
     if header_row:
         reader = csv.DictReader(file, delimiter=delimiter)
         if reader.fieldnames is None or any(
@@ -212,28 +214,30 @@ def main():
         options = {
             "type": "text",
             "placeholder": args.argument,
-            "percentEncoded": args.encode,
-            "optional": args.optional,
-            "secure": args.secure,
+            "percentEncoded": args.encode_arg,
+            "optional": args.optional_arg,
+            "secure": args.secure_arg,
         }
         global_parameters.append(f"# @raycast.argument1 {json.dumps(options)}")
 
     input_file, input_suffix = args.input
 
     if args.input_format:
-        items = (
-            parse_csv_input(input_file, args.header_row, args.delimiter)
-            if args.input_format == "csv"
-            else parse_json_input(input_file, args.line_delimited)
-        )
-    elif input_suffix == ".json":
-        items = parse_json_input(input_file, args.line_delimited)
-    elif input_suffix == ".csv":
-        items = parse_csv_input(input_file, args.header_row, args.delimiter)
+        input_format = args.input_format
+    elif input_suffix:
+        input_format = input_suffix[1:].lower()
     else:
-        print(
-            "Raygen was not able to infer the input format. Please provide the --input-format flag"
-        )
+        raise Exception
+    if input_format == "csv":
+        items = parse_csv_input(input_file, args.header_row)
+    elif input_format == "tsv":
+        items = parse_csv_input(input_file, args.header_row, delimiter="\t")
+    elif input_format == "json":
+        items = parse_json_input(input_file, line_delimited=False)
+    elif input_format == "ndjson":
+        items = parse_json_input(input_file, line_delimited=True)
+    else:
+        print(f"Unknown format : {args.input_format}")
         sys.exit(1)
 
     if args.clean and args.output_dir.exists():
@@ -249,6 +253,9 @@ def main():
         filename = args.dark_icon.name
         shutil.copy(args.icon_dark, args.output_dir / filename)
         global_parameters.append(f"# @raycast.iconDark {filename}")
+
+    for embed in args.embed:
+        shutil.copy(embed, args.output_dir / embed.name)
 
     for item in items:
         filename = item["title"].replace(" ", "-").lower() + ".sh"
