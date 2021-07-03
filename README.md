@@ -1,5 +1,7 @@
 # Raygen - Script Generator for [Raycast](https://raycast.com/)
 
+Script commands documentation -> https://github.com/raycast/script-commands
+
 ## Installation Guide
 
 ```sh
@@ -37,7 +39,7 @@ See the [example](./examples) folder for more illustrated usecases.
 
 ## Preview
 
-![example plugin preview](example/preview.png)
+![example plugin preview](examples/preview.png)
 
 ## Argument documentation
 
