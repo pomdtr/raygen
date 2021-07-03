@@ -25,7 +25,7 @@ def valid_path(path_str):
 
 
 def get_file_and_suffix(path_str):
-    path_suffix = None if path_str == "-" else Path(path_str).suffix
+    path_suffix = None if path_str == "-" else Path(path_str).suffix[1:].lower()
     return argparse.FileType("r")(path_str), path_suffix
 
 
@@ -152,11 +152,9 @@ def get_parser():
 
 def main():
     args = get_parser().parse_args()
-    arg_dict = vars(args)
 
-    input_file, input_suffix = arg_dict.pop("input")
     raygen_params, raycast_params, raycast_items = parse_items(
-        input_file, input_suffix, arg_dict
+        args
     )
 
     generate_scripts(

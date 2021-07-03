@@ -59,21 +59,13 @@ def parse_csv_input(file, header_row, delimiter=",") -> List[RaycastItem]:
 
 
 def parse_items(
-    input_file, input_suffix, args
+    args
 ) -> Tuple[RaygenParams, RaycastParams, List[RaycastItem]]:
-    input_format = args.pop("input_format", None)
-    if input_format:
-        input_format = input_format
-    elif input_suffix:
-        input_format = input_suffix[1:].lower()
-    else:
-        # TODO: Should not be here
-        print("No input format provided, please use the --input-format flag")
-        sys.exit(1)
-
+    input_file, input_suffix = args.input
+    input_format = args.input_format or input_suffix
     raycast_additional_args = {}
     raygen_additional_args = {}
-    header_row = args.pop("header_row")
+    header_row = args.header_row
     if input_format == "csv":
         raycast_items = parse_csv_input(input_file, header_row)
     elif input_format == "tsv":
@@ -96,10 +88,10 @@ def parse_items(
 
     raygen_args = complete_dict(
         {
-            "clean": args.get("clean"),
-            "output_dir": args.get("output_dir"),
-            "embeds": args.get("embed"),
-            "shebang": args.get("shebang"),
+            "clean": args.clean,
+            "output_dir": args.output_dir,
+            "embeds": args.embed,
+            "shebang": args.shebang,
         },
         raygen_additional_args,
     )
@@ -108,11 +100,11 @@ def parse_items(
     complete_items(raycast_items, args)
     raycast_args = complete_dict(
         {
-            "schema_version": args.get("schema_version"),
-            "mode": args.get("mode"),
-            "package_name": args.get("package_name"),
-            "author": args.get("author"),
-            "author_url": args.get("author_url"),
+            "schema_version": args.schema_version,
+            "mode": args.mode,
+            "package_name": args.package_name,
+            "author": args.author,
+            "author_url": args.author_url,
         },
         raycast_additional_args,
     )
@@ -126,24 +118,24 @@ def parse_items(
 
 def complete_items(items: List[RaycastItem], args):
     argument = None
-    if args.get("argument"):
+    if args.argument:
         argument = RaycastArgument(
-            placeholder=args.get("argument"),
-            percent_encoded=args.get("encode_arg"),
-            secure=args.get("secure_arg"),
-            optional=args.get("optional_arg"),
+            placeholder=args.argument,
+            percent_encoded=args.encode_arg,
+            secure=args.secure_arg,
+            optional=args.optional_arg,
         )
     for item in items:
         if argument:
             item.arguments = [argument]
-        if args.get("needs_confirmation"):
-            item.needs_confirmation = args["needs_confirmation"]
-        if args.get("current_directory_path"):
-            item.current_directory_path = args["current_directory_path"]
-        if args.get("icon"):
-            item.icon = args["icon"]
-        if args.get("icon_dark"):
-            item.icon_dark = args["icon_dark"]
+        if args.needs_confirmation:
+            item.needs_confirmation = args.needs_confirmation
+        if args.current_directory_path:
+            item.current_directory_path = args.current_directory_path
+        if args.icon:
+            item.icon = args.icon
+        if args.icon_dark:
+            item.icon_dark = args.icon_dark
 
 
 def generate_scripts(
@@ -192,7 +184,7 @@ def generate_scripts(
                 "optional": arg.optional,
                 "secure": arg.secure,
             }
-            global_parameters.append(f"# @raycast.argument{i} {json.dumps(options)}")
+            script_parameters.append(f"# @raycast.argument{i} {json.dumps(options)}")
 
         if raycast_item.description:
             script_parameters.append(
