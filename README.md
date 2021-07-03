@@ -8,7 +8,7 @@ pip install git+https://github.com/pomdtr/raygen.git
 
 ## Usage
 
-Write a csv or json file listing the title, command and optional description of the scripts.
+Write a `csv/tsv/json/ndjson` file listing the title, command and optional description of the scripts.
 
 ```csv
 title,command
@@ -43,23 +43,27 @@ See the [example](./examples) folder for more illustrated usecases.
 
 ```console
 $ raygen --help
-usage: raygen [-h] [--output-dir OUTPUT_DIR] [--clean]
+usage: raygen [-h] [--input-format {csv,tsv,json,ndjson}] [--header-row]
+              [--output-dir OUTPUT_DIR] [--clean]
               [--schema-version SCHEMA_VERSION]
               [--mode {silent,compact,fullOutput}] [--package PACKAGE]
               [--icon ICON] [--icon-dark ICON_DARK] [--argument PLACEHOLDER]
               [--encode-arg] [--secure-arg] [--optional-arg]
               [--current-directory-path CURRENT_DIRECTORY_PATH]
               [--needs-confirmation] [--author AUTHOR]
-              [--author-url AUTHOR_URL]
-              input_csv
+              [--author-url AUTHOR_URL] [--shebang SHEBANG] [--embed EMBED]
+              input
 
-Script Generator for Raycast (https://raycast.com/)
+Script Generator for Raycast (https://raycast.com/). See https://github.com/raycast/script-commands for an expansive documentation.
 
 positional arguments:
-  input_csv             csv describing the title, command and an optional description for each script. Use - to read from stdin.
+  input                 input file describing the title, command and an optional description for each script. Use - to read from stdin.
 
 optional arguments:
   -h, --help            show this help message and exit
+  --input-format {csv,tsv,json,ndjson}, -f {csv,tsv,json,ndjson}
+                        format of the input (default: None)
+  --header-row, -H      Do not parse the first line as script input (default: False)
   --output-dir OUTPUT_DIR, -o OUTPUT_DIR
                         Output folder of all generated scripts. (default: ./scripts)
   --clean, -r           automatically clean the output folder when it already exists. (default: False)
@@ -72,6 +76,7 @@ optional arguments:
   --icon-dark ICON_DARK
                         same as icon, but for dark theme. If not specified, then icon will be used in both themes. (default: None)
   --argument PLACEHOLDER, -a PLACEHOLDER
+                        add a custom argument to the command (default: None)
   --encode-arg          if you want Raycast to perform percent encoding on the argument value before passing it to the script. (default: False)
   --secure-arg          entered text will be replaced with asterisks and won't be recorded by history. (default: False)
   --optional-arg        if you want to mark the argument as optional. (default: False)
@@ -81,15 +86,17 @@ optional arguments:
   --author AUTHOR       define an author name to be part of the script commands documentation. (default: None)
   --author-url AUTHOR_URL
                         author social media, website, email or anything to help the users to get in touch. (default: None)
+  --shebang SHEBANG     customize the shebang of the script (Advanced Usage) (default: bash)
+  --embed EMBED         Include a file in the output folder (can be reapeated) (default: None)
 
 Example:
 
 # Simplest usage
-raygen options.csv
+raygen options.json
 
 # Pipe from stdin, add some optional params, clean output dir
-cat options.csv | raygen - --package-name Example --icon icon.png --clean
+cat options.csv | raygen --format csv --package-name Example --icon icon.png --clean -
 
 # Add an argument
-raygen options.csv --arg queryParam --encode-arg
+raygen options.csv --argument queryParam --encode-arg
 ```
