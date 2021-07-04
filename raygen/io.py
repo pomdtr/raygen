@@ -69,6 +69,15 @@ def copy(filepath, output_dir):
 def generate_scripts(
     raycast_items: List[RaycastItem], output_dir="./scripts", clean=False, shebang="bash", embeds=[]
 ):
+    """Generate one script for each provided item in the output folder
+
+    Args:
+        raycast_items (List[RaycastItem]): items params will be used as script directives
+        output_dir (str, optional): directory were all scripts will be stored. Defaults to "./scripts".
+        clean (bool, optional): if set, the output directory will be cleaned before any scripts generation. Defaults to False.
+        shebang (str, optional): shebang of the output scripts. Defaults to "bash".
+        embeds (list, optional): path to files to embed in the output dir. Usefull when you want to reference another script. Defaults to [].
+    """
     output_dir = Path(output_dir)
     if clean and output_dir.exists():
         shutil.rmtree(output_dir)
@@ -79,7 +88,7 @@ def generate_scripts(
 
     for raycast_item in raycast_items:
         if not raycast_item.title:
-            raise Exception
+            raise ValueError("Title should be provided for each item")
         filename = raycast_item.title.replace(" ", "_").replace("/", "-").lower() + ".sh"
         filename = re.sub(r"[\s/.]+", "-", raycast_item.title).lower() + "." + shebang
 
