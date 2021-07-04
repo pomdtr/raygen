@@ -3,6 +3,7 @@ import shutil
 import sys
 from pathlib import Path
 from typing import List
+import re
 
 from raygen.models import (RaycastItem,
                            RaygenParams)
@@ -79,7 +80,8 @@ def generate_scripts(
     for raycast_item in raycast_items:
         if not raycast_item.title:
             raise Exception
-        filename = raycast_item.title.replace(" ", "-").lower() + ".sh"
+        filename = raycast_item.title.replace(" ", "_").replace("/", "-").lower() + ".sh"
+        filename = re.sub(r"[\s/.]+", "-", raycast_item.title).lower() + "." + shebang
 
         if raycast_item.icon:
             copy(raycast_item.icon, output_dir)

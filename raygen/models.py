@@ -123,10 +123,10 @@ class RaycastItem():
 @dataclass_json(letter_case=LetterCase.CAMEL)
 @dataclass
 class RaygenParams():
-    output_dir: str = "./scripts"
+    output_dir: str = ""
     clean: bool = False
     embeds: List[str] = field(default_factory=list)
-    shebang: str = "bash"
+    shebang: str = ""
     defaults: RaycastItem = field(default_factory=RaycastItem)
     items: List[RaycastItem] = field(default_factory=list)
 
