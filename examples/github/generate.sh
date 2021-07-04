@@ -1,14 +1,3 @@
 #!/usr/bin/env sh
-ORG=$1
-LIMIT=${2:-1000}
-MIN_PUSH_TIME=${3:-2021}
-
-gh repo list "$ORG" \
-  --no-archived \
-  --json name \
-  --json description \
-  --json url \
-  --json pushedAt \
-  --limit "$LIMIT" \
-  --jq '.[] | select(.pushedAt > '"$MIN_PUSH_TIME"') | {title: "Open \(.name) Repository", command: "open \(.url)", description: .description}' \
-| raygen --icon logo.png --input-format ndjson --package-name Github --clean -
+gh api -X GET /users/pomdtr/starred --paginate --jq '.[] | select(.owner.login == "dailymotion") | {title: "Open or Search \(.name) Repository", command: "./open_or_search.sh \(.html_url) $1", description: .description}' \
+| raygen --icon logo.png --input-format ndjson --package-name Github --clean --argument query --optional-arg --encode-arg --embed open_or_search.sh -

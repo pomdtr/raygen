@@ -73,19 +73,21 @@ def get_parser():
     )
     PARSER.add_argument(
         "--schema-version",
-        default=1,
-        help="schema version to prepare for future changes in the API. ",
+        help="schema version to prepare for future changes in the API.",
     )
     PARSER.add_argument(
         "--mode",
         "-m",
-        default="silent",
-        choices=["silent", "compact", "fullOutput"],
+        choices=["silent", "compact", "fullOutput", "inline"],
         help="specifies how the script is executed and how the output is presented.",
     )
     PARSER.add_argument(
         "--package-name",
         help="display name of the package that is shown as subtitle in the root search.",
+    )
+    PARSER.add_argument(
+        "--refresh-time",
+        help="specify a refresh interval for inline mode scripts in seconds, minutes, hours or days. Examples: 10s, 1m, 12h, 1d."
     )
     PARSER.add_argument(
         "--icon",
@@ -153,17 +155,14 @@ def get_parser():
 def main():
     args = get_parser().parse_args()
 
-    raygen_params, raycast_params, raycast_items = parse_items(
-        args
-    )
+    raygen_params = parse_items(args)
 
     generate_scripts(
+        raygen_params.get_items(),
         raygen_params.output_dir,
-        raycast_params,
-        raycast_items,
-        clean=raygen_params.clean,
-        embeds=raygen_params.embeds,
-        shebang=raygen_params.shebang,
+        raygen_params.clean,
+        raygen_params.shebang,
+        raygen_params.embeds,
     )
 
 
