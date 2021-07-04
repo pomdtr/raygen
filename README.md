@@ -10,6 +10,8 @@ pip install git+https://github.com/pomdtr/raygen.git
 
 ## Usage
 
+### Writing a csv file manually
+
 Write a `csv/tsv/json/ndjson` file listing the title, command and optional description of the scripts.
 
 ```csv
@@ -33,6 +35,33 @@ scripts/
 └── stack-on-top-of-up.sh
 
 0 directories, 5 files
+```
+
+### Using the output of a command to generate scripts
+
+```sh
+#!/usr/bin/env sh
+gh api -X GET /users/pomdtr/starred --paginate \
+  --jq '.[] | {title: "Open \(.name) Starred Repository", command: "open \(.html_url) $1", description: .description}' \
+| raygen --input-format ndjson --package-name Github --clean -
+```
+
+### Output json from any programming language and pipe it to raygen
+
+```sh
+node fetch_results.js | raygen --format json -
+```
+
+Every cli flag of raygen can be passed as a json field.
+
+### Use raygen as a lib
+
+```python
+from raygen import generate_scripts, RaycastItem
+
+...
+
+generate_scripts(items, output_dir="./scripts")
 ```
 
 See the [example](./examples) folder for more illustrated usecases.
