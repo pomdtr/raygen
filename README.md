@@ -48,7 +48,8 @@ $ raygen --help
 usage: raygen [-h] [--input-format {csv,tsv,json,ndjson}] [--header-row]
               [--output-dir OUTPUT_DIR] [--clean]
               [--schema-version SCHEMA_VERSION]
-              [--mode {silent,compact,fullOutput}] [--package-name PACKAGE]
+              [--mode {silent,compact,fullOutput,inline}]
+              [--package-name PACKAGE_NAME] [--refresh-time REFRESH_TIME]
               [--icon ICON] [--icon-dark ICON_DARK] [--argument PLACEHOLDER]
               [--encode-arg] [--secure-arg] [--optional-arg]
               [--current-directory-path CURRENT_DIRECTORY_PATH]
@@ -70,10 +71,13 @@ optional arguments:
                         Output folder of all generated scripts. (default: ./scripts)
   --clean, -r           automatically clean the output folder when it already exists. (default: False)
   --schema-version SCHEMA_VERSION
-                        schema version to prepare for future changes in the API.  (default: 1)
-  --mode {silent,compact,fullOutput}, -m {silent,compact,fullOutput}
-                        specifies how the script is executed and how the output is presented. (default: silent)
-  --package-name PACKAGE_NAME     display name of the package that is shown as subtitle in the root search. (default: None)
+                        schema version to prepare for future changes in the API. (default: None)
+  --mode {silent,compact,fullOutput,inline}, -m {silent,compact,fullOutput,inline}
+                        specifies how the script is executed and how the output is presented. (default: None)
+  --package-name PACKAGE_NAME
+                        display name of the package that is shown as subtitle in the root search. (default: None)
+  --refresh-time REFRESH_TIME
+                        specify a refresh interval for inline mode scripts in seconds, minutes, hours or days. Examples: 10s, 1m, 12h, 1d. (default: None)
   --icon ICON           icon that is displayed in the root search (PNG or JPEG). (default: None)
   --icon-dark ICON_DARK
                         same as icon, but for dark theme. If not specified, then icon will be used in both themes. (default: None)
@@ -89,7 +93,7 @@ optional arguments:
   --author-url AUTHOR_URL
                         author social media, website, email or anything to help the users to get in touch. (default: None)
   --shebang SHEBANG     customize the shebang of the script (Advanced Usage) (default: bash)
-  --embed EMBED         Include a file in the output folder (can be reapeated) (default: None)
+  --embed EMBED         Include a file in the output folder (can be reapeated) (default: [])
 
 Example:
 
@@ -101,4 +105,5 @@ cat options.csv | raygen --format csv --package-name Example --icon icon.png --c
 
 # Add an argument
 raygen options.csv --argument queryParam --encode-arg
+
 ```

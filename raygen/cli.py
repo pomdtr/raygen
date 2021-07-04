@@ -2,6 +2,7 @@ import argparse
 import pathlib
 import sys
 from pathlib import Path
+import sys
 
 from raygen.io import generate_scripts, parse_items
 
@@ -170,7 +171,7 @@ def main():
 
         print(f"Generated {len(raycast_items)} scripts")
     except Exception as e:
-        print(str)
+        print(str(e), file=sys.stderr)
         sys.exit(1)
 
 
