@@ -1,20 +1,21 @@
 import csv
+import re
 import shutil
-import sys
 from pathlib import Path
 from typing import List
-import re
 
-from raygen.models import (RaycastItem,
-                           RaygenParams)
+from raygen.models import RaycastItem, RaygenParams
+
 
 def ndjson_loader(file):
     return [RaycastItem.from_json(line) for line in file]
+
 
 def parse_json_input(file, line_delimited) -> RaygenParams:
     if line_delimited:
         return RaygenParams(items=list(ndjson_loader(file)))
     return RaygenParams.from_json(file.read())
+
 
 def parse_csv_input(file, header_row, delimiter=",") -> List[RaycastItem]:
     if header_row:
@@ -30,11 +31,14 @@ def parse_csv_input(file, header_row, delimiter=",") -> List[RaycastItem]:
             raise ValueError("At least two columns are required for each row")
         yield RaycastItem(title=row[0], command=row[1])
 
-def parse_items(
-    args
-) -> RaygenParams:
+
+def parse_items(args) -> RaygenParams:
     input_file, input_suffix = args.input
     input_format = args.input_format or input_suffix
+    if input_format is None:
+        raise ValueError(
+            "Could not find out input format, please provide the --input-format flag"
+        )
     header_row = args.header_row
     cli_params = RaygenParams.from_cli(args)
 
@@ -53,9 +57,7 @@ def parse_items(
         json_params = parse_json_input(input_file, line_delimited=True)
         return json_params.apply_defaults(cli_params)
     else:
-        # TODO
-        print(f"Unknown format : {input_format}")
-        sys.exit(1)
+        raise ValueError("Unknown format : {input_format}")
 
 
 def copy(filepath, output_dir):
@@ -67,7 +69,11 @@ def copy(filepath, output_dir):
 
 
 def generate_scripts(
-    raycast_items: List[RaycastItem], output_dir="./scripts", clean=False, shebang="bash", embeds=[]
+    raycast_items: List[RaycastItem],
+    output_dir="./scripts",
+    clean=False,
+    shebang="bash",
+    embeds=[],
 ):
     """Generate one script for each provided item in the output folder
 
@@ -86,10 +92,13 @@ def generate_scripts(
     for embed in embeds:
         copy(embed, output_dir)
 
+    script_paths = []
     for raycast_item in raycast_items:
         if not raycast_item.title:
             raise ValueError("Title should be provided for each item")
-        filename = raycast_item.title.replace(" ", "_").replace("/", "-").lower() + ".sh"
+        filename = (
+            raycast_item.title.replace(" ", "_").replace("/", "-").lower() + ".sh"
+        )
         filename = re.sub(r"[\s/.]+", "-", raycast_item.title).lower() + "." + shebang
 
         if raycast_item.icon:
@@ -98,6 +107,8 @@ def generate_scripts(
             copy(raycast_item.icon_dark, output_dir)
 
         with open(Path(output_dir) / filename, "w") as fh:
-            fh.write(
-                raycast_item.build_script(shebang)
-            )
+            fh.write(raycast_item.build_script(shebang))
+
+        script_paths.append(output_dir / filename)
+
+    return script_paths

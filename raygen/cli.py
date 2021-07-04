@@ -1,5 +1,6 @@
 import argparse
 import pathlib
+import sys
 from pathlib import Path
 
 from raygen.io import generate_scripts, parse_items
@@ -87,7 +88,7 @@ def get_parser():
     )
     PARSER.add_argument(
         "--refresh-time",
-        help="specify a refresh interval for inline mode scripts in seconds, minutes, hours or days. Examples: 10s, 1m, 12h, 1d."
+        help="specify a refresh interval for inline mode scripts in seconds, minutes, hours or days. Examples: 10s, 1m, 12h, 1d.",
     )
     PARSER.add_argument(
         "--icon",
@@ -155,15 +156,22 @@ def get_parser():
 def main():
     args = get_parser().parse_args()
 
-    raygen_params = parse_items(args)
+    try:
+        raygen_params = parse_items(args)
+        raycast_items = raygen_params.get_items()
 
-    generate_scripts(
-        raygen_params.get_items(),
-        raygen_params.output_dir,
-        raygen_params.clean,
-        raygen_params.shebang,
-        raygen_params.embeds,
-    )
+        generate_scripts(
+            raycast_items,
+            raygen_params.output_dir,
+            raygen_params.clean,
+            raygen_params.shebang,
+            raygen_params.embeds,
+        )
+
+        print(f"Generated {len(raycast_items)} scripts")
+    except Exception as e:
+        print(str)
+        sys.exit(1)
 
 
 if __name__ == "__main__":
